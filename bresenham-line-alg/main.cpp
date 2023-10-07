@@ -25,10 +25,10 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 void processInput(GLFWwindow* window);
-void updateLine(vector<point<float>>& lineVertices);
-void drawLine(const vector<point<float>>& lineVertices, unsigned int lineVAO, unsigned int lineVBO);
-void updatePoint(point<float>& pointVertex);
-void drawPoint(point<float>& pointVertex, unsigned int pointVAO, unsigned int pointVBO);
+void updateLine(vector<point<float>>& lineVertices, unsigned int lineVAO, unsigned int lineVBO);
+void drawLine(const size_t lineVerticesCount, unsigned int lineVAO);
+void updatePoint(point<float>& pointVertex, unsigned int pointVAO, unsigned int pointVBO);
+void drawPoint(unsigned int pointVAO);
 
 // data
 point p1, p2;
@@ -117,12 +117,12 @@ int main()
         if (shouldUpdateLine)
         {
             shouldUpdateLine = !shouldUpdateLine;
-            updateLine(lineVertices);
+            updateLine(lineVertices, lineVAO, lineVBO);
         }
         if (shouldUpdatePoint)
         {
             shouldUpdatePoint = !shouldUpdatePoint;
-            updatePoint(pointVertex);
+            updatePoint(pointVertex, pointVAO, pointVAO);
         }
 
         // draw config
@@ -134,9 +134,9 @@ int main()
         // draw
         // ----
         if (p2.x != -1)
-            drawLine(lineVertices, lineVAO, lineVBO);
+            drawLine(lineVertices.size(), lineVAO);
         else if (p1.x != -1)
-            drawPoint(pointVertex, pointVAO, pointVAO);
+            drawPoint(pointVAO);
         
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
@@ -152,7 +152,7 @@ int main()
 	return EXIT_SUCCESS;
 }
 
-void updateLine(vector<point<float>>& lineVertices)
+void updateLine(vector<point<float>>& lineVertices, unsigned int lineVAO, unsigned int lineVBO)
 {
     // do sth with equal x1 x2!
 
@@ -238,28 +238,34 @@ void updateLine(vector<point<float>>& lineVertices)
     lineVertices.clear();
     for (int i = 0; i < len; ++i)
         lineVertices.push_back(point(2.0f * line[i].x / (float)SCR_WIDTH - 1.0f, 2.0f * line[i].y / (float)SCR_HEIGHT - 1.0f));
-}
 
-void drawLine(const vector<point<float>>& lineVertices, unsigned int lineVAO, unsigned int lineVBO)
-{
     glBindVertexArray(lineVAO);
     glBindBuffer(GL_ARRAY_BUFFER, lineVBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(point<float>) * lineVertices.size(), &lineVertices[0], GL_STATIC_DRAW);
-    glDrawArrays(GL_POINTS, 0, lineVertices.size());
     glBindVertexArray(0);
 }
 
-void updatePoint(point<float>& pointVertex)
+void drawLine(const size_t lineVerticesCount, unsigned int lineVAO)
+{
+    glBindVertexArray(lineVAO);
+    glDrawArrays(GL_POINTS, 0, lineVerticesCount);
+    glBindVertexArray(0);
+}
+
+void updatePoint(point<float>& pointVertex, unsigned int pointVAO, unsigned int pointVBO)
 {
     pointVertex.x = 2.0f * p1.x / (float)SCR_WIDTH - 1.0f;
     pointVertex.y = 1.0f - 2.0f * p1.y / (float)SCR_HEIGHT;
-}
 
-void drawPoint(point<float>& pointVertex, unsigned int pointVAO, unsigned int pointVBO)
-{
     glBindVertexArray(pointVAO);
     glBindBuffer(GL_ARRAY_BUFFER, pointVBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(pointVertex), &pointVertex, GL_STATIC_DRAW);
+    glBindVertexArray(0);
+}
+
+void drawPoint(unsigned int pointVAO)
+{
+    glBindVertexArray(pointVAO);
     glDrawArrays(GL_POINTS, 0, 1);
     glBindVertexArray(0);
 }
